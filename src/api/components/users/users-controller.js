@@ -18,6 +18,78 @@ async function getUsers(request, response, next) {
 }
 
 /**
+ * paginitation
+ * @param {object} request - Express request object
+ * @param {object} response - Express response object
+ * @param {object} next - Express route middlewares
+ * @returns {object} Response object or pass an error to the next route
+ */
+async function getUsers(request, response, next) {
+  try {
+    const { page = 1, pageSize = 5, sortField = null, sortOrder = 'asc', search = null } = request.query;
+    let users = await usersService.getUsers();
+    users = users.map(user => {
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      };
+    });
+
+    if (sortField && (sortOrder === 'asc' || sortOrder === 'desc')) {
+      users = sortUser(users, sortField, sortOrder);
+    }
+
+    if (search) {
+      users = filterUsers(users, search);
+
+    }
+
+    const totalItems = users.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const results = paginateUsers(users, page, pageSize);
+
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    response.status(200).json({
+      page_number: parseInt(page),
+      page_size: parseInt(pageSize),
+      count: parseInt(totalItems),
+      total_pages: parseInt(totalPages),
+      has_previous_page: hasPreviousPage,
+      has_next_page: hasNextPage,
+      Data: results,
+    });
+  } catch (error) {
+    next(error); 
+  }
+}
+function sortUsers(users, sortField, sortOrder) {
+  return users.sort((a, b) => {
+    const fieldA = a[sortField];
+    const fieldB = b[sortField];
+    return sortOrder === 'asc' ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA);
+  });
+}
+
+function filterUsers(users, search) {
+  const [searchField, searchKey] = search.split(':');
+  if (searchField === 'email' || searchField === 'name') {
+    return users.filter((user) =>
+      user[searchField].toLowerCase().includes(searchKey.toLowerCase())
+    );
+  }
+  return users;
+}
+
+function paginateUsers(users, page, pageSize) {
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, users.length);
+  return users.slice(startIndex, endIndex);
+}
+
+/**
  * Handle get user detail request
  * @param {object} request - Express request object
  * @param {object} response - Express response object

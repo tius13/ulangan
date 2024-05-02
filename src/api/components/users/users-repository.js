@@ -8,6 +8,17 @@ async function getUsers() {
   return User.find({});
 }
 
+/*paginitation*/
+async function getUsers() {
+  try {
+    const users = await User.find({});
+    return users;
+  } catch (error) {
+    throw error;
+  }
+}
+
+
 /**
  * Get user detail
  * @param {string} id - User ID

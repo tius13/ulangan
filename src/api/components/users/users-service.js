@@ -21,6 +21,13 @@ async function getUsers() {
   return results;
 }
 
+/* paginitation */
+async function getUsers() {
+  return await usersRepository.getUsers();
+}
+
+
+
 /**
  * Get user detail
  * @param {string} id - User ID
