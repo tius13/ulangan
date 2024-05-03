@@ -26,7 +26,9 @@ async function getUsers(request, response, next) {
  */
 async function getUsers(request, response, next) {
   try {
-    const { page = 1, pageSize = 5, sortField = null, sortOrder = 'asc', search = null } = request.query;
+    const { search = null } = request.query;
+    const page = parseInt(request.query.page) || 1;
+    const pageSize = parseInt(request.query.pageSize) || 5 ;
     let users = await usersService.getUsers();
     users = users.map(user => {
       return {
@@ -36,13 +38,8 @@ async function getUsers(request, response, next) {
       };
     });
 
-    if (sortField && (sortOrder === 'asc' || sortOrder === 'desc')) {
-      users = sortUser(users, sortField, sortOrder);
-    }
-
     if (search) {
       users = filterUsers(users, search);
-
     }
 
     const totalItems = users.length;
@@ -62,25 +59,16 @@ async function getUsers(request, response, next) {
       Data: results,
     });
   } catch (error) {
-    next(error); 
+    next(error);
   }
-}
-function sortUsers(users, sortField, sortOrder) {
-  return users.sort((a, b) => {
-    const fieldA = a[sortField];
-    const fieldB = b[sortField];
-    return sortOrder === 'asc' ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA);
-  });
 }
 
 function filterUsers(users, search) {
-  const [searchField, searchKey] = search.split(':');
-  if (searchField === 'email' || searchField === 'name') {
-    return users.filter((user) =>
-      user[searchField].toLowerCase().includes(searchKey.toLowerCase())
-    );
-  }
-  return users;
+  const searchKey = search.toLowerCase();
+  return users.filter((user) =>
+    user.name.toLowerCase().includes(searchKey) ||
+    user.email.toLowerCase().includes(searchKey)
+  );
 }
 
 function paginateUsers(users, page, pageSize) {
