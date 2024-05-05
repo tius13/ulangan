@@ -4,7 +4,7 @@ const { passwordMatched } = require('../../../utils/password');
 
 
 const failLoginAttempts = {};
-const maxFailedAttempts = 2;
+const maxFailedAttempts = 5;
 const lockDuration = 30 * 60 * 1000;
 /**
  * Check username and password for login.
@@ -46,7 +46,7 @@ const remainingTime = calculateResetTime(email);
   if (remainingTime > 0) {
     const countdown = Math.floor(remainingTime / 1000);
     throw new Error(
-      `Akun Anda diblokir selama ${countdown} detik karena terlalu banyak percobaan login yang gagal.`
+      `403 Forbidden : terlalu banyak percobaan login. Akun Anda diblokir selama ${countdown} detik.`
     );
   }
 
@@ -58,7 +58,7 @@ const remainingTime = calculateResetTime(email);
   if (failedAttempts >= maxFailedAttempts) {
     failLoginAttempts[email].lastAttempt = Date.now() + lockDuration;
     throw new Error(
-      `403 Forbidden : terlalu banyak percobaan login.`
+      `anda telah mencapai limit kesalahan, jika anda salah memaasukan code lagi akunanda akan terblokir.`
     );
   }
 /**
