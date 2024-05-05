@@ -1,7 +1,7 @@
 const authenticationRepository = require('./authentication-repository');
 const { generateToken } = require('../../../utils/session-token');
 const { passwordMatched } = require('../../../utils/password');
-
+const { errorResponder, errorTypes } = require('../../../core/errors');
 
 const failLoginAttempts = {};
 const maxFailedAttempts = 5;
@@ -45,8 +45,9 @@ async function checkLoginCredentials(email, password) {
 const remainingTime = calculateResetTime(email);
   if (remainingTime > 0) {
     const countdown = Math.floor(remainingTime / 1000);
-    throw new Error(
-      `403 Forbidden : terlalu banyak percobaan login. Akun Anda diblokir selama ${countdown} detik.`
+    throw errorResponder(
+      errorTypes.FORBIDDEN,
+      `Akun Anda diblokir selama ${countdown} detik.`
     );
   }
 
@@ -57,8 +58,9 @@ const remainingTime = calculateResetTime(email);
 
   if (failedAttempts >= maxFailedAttempts) {
     failLoginAttempts[email].lastAttempt = Date.now() + lockDuration;
-    throw new Error(
-      `anda telah mencapai limit kesalahan, jika anda salah memaasukan code lagi akunanda akan terblokir.`
+    throw errorResponder(
+      errorTypes.INVALID_CREDENTIALS,
+      'Wrong email or password'
     );
   }
 /**
